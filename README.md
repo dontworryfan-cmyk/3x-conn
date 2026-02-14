@@ -1,56 +1,116 @@
 # 3X Connect
 
-Панель управления локациями 3X UI с безопасным входом, 2FA, объединённой подпиской и Telegram-ботом для мониторинга.
+Панель управления локациями 3X UI с авторизацией (логин/пароль + 2FA), проверкой пинга и Telegram-ботом.
 
-## Что добавлено
+## Установка на свою Ubuntu-машину (с нуля)
 
-- Авторизация: логин + пароль + обязательный 2FA (TOTP).
-- Локации: добавление/удаление, ручной пинг, пинг всех локаций.
-- Подписка: генерация единого URL для Happ.
-- Метаданные для Happ: **Заголовок Подписки**, **URL Поддержки**, **Объявление**.
-- Telegram-бот (Bot API): проверка Admin ID, команды `/menu`, `/status`, `/ping`, `/add`, `/delete`.
-- Установочная команда Ubuntu в настройках:
-  `bash <(curl -Ls https://raw.githubusercontent.com/<ваш_user>/<ваш_repo>/main/scripts/install-3x-connect.sh)`
-- Вспомогательный скрипт установки: `scripts/install-3x-connect.sh`.
+Ниже только рабочий путь: **клонируете репозиторий на сервер** и разворачиваете локально.
+Старые варианты с плейсхолдерами и нерабочими командами больше не используются.
 
-
-## Отдельная команда установки панели на Ubuntu
-
-Рабочий вариант (замените `<user>` и `<repo>`):
+### 1) Подготовка сервера
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/<user>/<repo>/main/scripts/install-3x-connect.sh -o install-3x-connect.sh
-sudo bash install-3x-connect.sh --repo https://github.com/<user>/<repo>.git --ref main --port 3000
+sudo apt update
+sudo apt install -y git curl ca-certificates
 ```
 
-Если хотите one-liner:
+### 2) Клонирование репозитория
 
 ```bash
-sudo bash -c 'curl -fsSL https://raw.githubusercontent.com/<user>/<repo>/main/scripts/install-3x-connect.sh | bash -s -- --repo https://github.com/<user>/<repo>.git --ref main --port 3000'
+git clone https://github.com/<YOUR_USER>/<YOUR_REPO>.git
+cd <YOUR_REPO>
 ```
 
-Скрипт автоматически:
-- установит зависимости и Node.js,
-- скачает репозиторий,
-- поднимет systemd-сервис `3x-connect`,
-- запустит панель на выбранном порту.
+### 3) Запуск авто-развертывания
 
-## Запуск
+Из корня репозитория:
 
 ```bash
-npm start
+sudo bash scripts/deploy-local.sh --port 3000
 ```
 
-Откройте: `http://localhost:3000`
+Опционально можно указать:
 
-## Telegram команды
+```bash
+sudo bash scripts/deploy-local.sh --repo-dir "$(pwd)" --port 3000 --dir /opt/3x-connect --service 3x-connect
+```
 
-- `/menu` — главное меню;
-- `/status` — статус локаций и их пинг;
-- `/ping` — ручной пинг всех локаций;
-- `/add NAME URL` — добавить локацию;
-- `/delete ID` — удалить локацию.
+Что делает скрипт:
+- ставит Node.js 20 (если нет),
+- копирует проект в `/opt/3x-connect`,
+- инициализирует `data/*.json`,
+- создает и запускает `systemd`-сервис.
 
-## Важно по безопасности
+### 4) Проверка после установки
 
-Невозможно «исключить все варианты взлома» на 100%, но в проект уже добавлены базовые меры (2FA, сессии HttpOnly/SameSite, валидация входных данных). Для production обязательно ставьте HTTPS reverse-proxy, firewall, rate-limit и регулярные обновления ОС.
+```bash
+systemctl status 3x-connect --no-pager
+journalctl -u 3x-connect -f
+```
+
+Открыть панель:
+
+```text
+http://<SERVER_IP>:3000
+```
+
+При первом входе создайте администратора и привяжите 2FA.
+
+---
+
+## Ручное развертывание (без скрипта)
+
+Если хотите полностью вручную:
+
+```bash
+sudo apt update
+sudo apt install -y nodejs npm
+sudo mkdir -p /opt/3x-connect
+sudo rsync -a --delete --exclude .git ./ /opt/3x-connect/
+cd /opt/3x-connect
+```
+
+Создайте service `/etc/systemd/system/3x-connect.service`:
+
+```ini
+[Unit]
+Description=3X Connect Panel
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=/opt/3x-connect
+Environment=PORT=3000
+ExecStart=/usr/bin/node server.js
+Restart=always
+RestartSec=3
+User=root
+
+[Install]
+WantedBy=multi-user.target
+```
+
+Далее:
+
+```bash
+sudo systemctl daemon-reload
+sudo systemctl enable --now 3x-connect
+```
+
+---
+
+## Обновление панели
+
+В корне локального репозитория:
+
+```bash
+git pull
+sudo bash scripts/deploy-local.sh --repo-dir "$(pwd)" --port 3000
+```
+
+## Безопасность (обязательно для production)
+
+- Закройте порт панели через firewall и открывайте доступ только нужным IP.
+- Лучше ставить reverse proxy с HTTPS (nginx/caddy).
+- Используйте сложный пароль и 2FA.
+- Регулярно обновляйте систему.

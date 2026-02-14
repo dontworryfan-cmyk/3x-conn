@@ -2,7 +2,7 @@
   "subscriptionTitle": "",
   "supportUrl": "",
   "announcement": "",
-  "installCommand": "sudo bash -c 'curl -fsSL https://raw.githubusercontent.com/<user>/<repo>/main/scripts/install-3x-connect.sh | bash -s -- --repo https://github.com/<user>/<repo>.git --ref main --port 3000'",
+  "installCommand": "sudo bash scripts/deploy-local.sh --port 3000",
   "telegram": {
     "enabled": false,
     "botToken": "",
