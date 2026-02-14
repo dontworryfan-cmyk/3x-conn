@@ -580,7 +580,7 @@ async function handleApi(req, res, url) {
       supportUrl: '',
       announcement: '',
       telegram: { enabled: false, botToken: '', adminId: '', lastUpdateId: 0 },
-      installCommand: "sudo bash scripts/deploy-local.sh --port 3000"
+      installCommand: "curl -fsSL https://raw.githubusercontent.com/<YOUR_USER>/<YOUR_REPO>/main/install.sh -o install.sh && sudo bash install.sh --repo https://github.com/<YOUR_USER>/<YOUR_REPO>.git --ref main --port 3000"
     });
     if (settings.telegram?.botToken) settings.telegram.botToken = '***hidden***';
     sendJson(res, 200, settings);
@@ -601,7 +601,7 @@ async function handleApi(req, res, url) {
       supportUrl: '',
       announcement: '',
       telegram: { enabled: false, botToken: '', adminId: '', lastUpdateId: 0 },
-      installCommand: "sudo bash scripts/deploy-local.sh --port 3000"
+      installCommand: "curl -fsSL https://raw.githubusercontent.com/<YOUR_USER>/<YOUR_REPO>/main/install.sh -o install.sh && sudo bash install.sh --repo https://github.com/<YOUR_USER>/<YOUR_REPO>.git --ref main --port 3000"
     });
 
     const supportUrl = String(body.supportUrl || '').trim();

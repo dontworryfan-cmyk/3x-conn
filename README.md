@@ -2,46 +2,42 @@
 
 Панель управления локациями 3X UI с авторизацией (логин/пароль + 2FA), проверкой пинга и Telegram-ботом.
 
-## Установка на свою Ubuntu-машину (с нуля)
+## Почему у вас была ошибка `scripts/deploy-local.sh: No such file or directory`
 
-Ниже только рабочий путь: **клонируете репозиторий на сервер** и разворачиваете локально.
-Старые варианты с плейсхолдерами и нерабочими командами больше не используются.
+Эта ошибка возникает, когда команда запускается **не из папки репозитория**.
+Скрипт `scripts/deploy-local.sh` существует только внутри клонированного проекта.
 
-### 1) Подготовка сервера
+---
+
+## Рабочий способ №1 (рекомендуется): bootstrap-скрипт из любого каталога
+
+Этот способ можно запускать хоть из `/root`, хоть из `/home`.
 
 ```bash
-sudo apt update
-sudo apt install -y git curl ca-certificates
+curl -fsSL https://raw.githubusercontent.com/<YOUR_USER>/<YOUR_REPO>/main/install.sh -o install.sh
+sudo bash install.sh --repo https://github.com/<YOUR_USER>/<YOUR_REPO>.git --ref main --port 3000
 ```
 
-### 2) Клонирование репозитория
+Что делает `install.sh`:
+- клонирует репозиторий во временную папку,
+- запускает внутренний deploy-скрипт,
+- разворачивает сервис через systemd.
+
+---
+
+## Рабочий способ №2: классический (клонирование + локальный deploy)
 
 ```bash
 git clone https://github.com/<YOUR_USER>/<YOUR_REPO>.git
 cd <YOUR_REPO>
-```
-
-### 3) Запуск авто-развертывания
-
-Из корня репозитория:
-
-```bash
 sudo bash scripts/deploy-local.sh --port 3000
 ```
 
-Опционально можно указать:
+> Важно: команду выше нужно запускать **после `cd <YOUR_REPO>`**.
 
-```bash
-sudo bash scripts/deploy-local.sh --repo-dir "$(pwd)" --port 3000 --dir /opt/3x-connect --service 3x-connect
-```
+---
 
-Что делает скрипт:
-- ставит Node.js 20 (если нет),
-- копирует проект в `/opt/3x-connect`,
-- инициализирует `data/*.json`,
-- создает и запускает `systemd`-сервис.
-
-### 4) Проверка после установки
+## Проверка после установки
 
 ```bash
 systemctl status 3x-connect --no-pager
@@ -58,19 +54,16 @@ http://<SERVER_IP>:3000
 
 ---
 
-## Ручное развертывание (без скрипта)
-
-Если хотите полностью вручную:
+## Ручное развертывание (без скриптов)
 
 ```bash
 sudo apt update
-sudo apt install -y nodejs npm
+sudo apt install -y nodejs npm rsync
 sudo mkdir -p /opt/3x-connect
 sudo rsync -a --delete --exclude .git ./ /opt/3x-connect/
-cd /opt/3x-connect
 ```
 
-Создайте service `/etc/systemd/system/3x-connect.service`:
+Файл `/etc/systemd/system/3x-connect.service`:
 
 ```ini
 [Unit]
@@ -96,21 +89,3 @@ WantedBy=multi-user.target
 sudo systemctl daemon-reload
 sudo systemctl enable --now 3x-connect
 ```
-
----
-
-## Обновление панели
-
-В корне локального репозитория:
-
-```bash
-git pull
-sudo bash scripts/deploy-local.sh --repo-dir "$(pwd)" --port 3000
-```
-
-## Безопасность (обязательно для production)
-
-- Закройте порт панели через firewall и открывайте доступ только нужным IP.
-- Лучше ставить reverse proxy с HTTPS (nginx/caddy).
-- Используйте сложный пароль и 2FA.
-- Регулярно обновляйте систему.

@@ -2,7 +2,7 @@
   "subscriptionTitle": "",
   "supportUrl": "",
   "announcement": "",
-  "installCommand": "sudo bash scripts/deploy-local.sh --port 3000",
+  "installCommand": "curl -fsSL https://raw.githubusercontent.com/<YOUR_USER>/<YOUR_REPO>/main/install.sh -o install.sh && sudo bash install.sh --repo https://github.com/<YOUR_USER>/<YOUR_REPO>.git --ref main --port 3000",
   "telegram": {
     "enabled": false,
     "botToken": "",
