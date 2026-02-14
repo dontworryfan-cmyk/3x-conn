@@ -1,29 +1,89 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-echo "3X UI helper install"
-read -rp "Порт панели (например 2053): " PANEL_PORT
-if ! [[ "$PANEL_PORT" =~ ^[0-9]+$ ]]; then
+if [[ ${EUID:-$(id -u)} -ne 0 ]]; then
+  echo "Запустите скрипт от root: sudo bash install-3x-connect.sh" >&2
+  exit 1
+fi
+
+echo "=== Установка панели 3X Connect (Ubuntu) ==="
+read -rp "Порт панели (по умолчанию 3000): " PANEL_PORT
+PANEL_PORT=${PANEL_PORT:-3000}
+if ! [[ "$PANEL_PORT" =~ ^[0-9]+$ ]] || (( PANEL_PORT < 1 || PANEL_PORT > 65535 )); then
   echo "Некорректный порт" >&2
   exit 1
 fi
 
-read -rp "Логин админки: " ADMIN_LOGIN
-read -rsp "Пароль админки: " ADMIN_PASS
-echo
+read -rp "Путь установки (по умолчанию /opt/3x-connect): " INSTALL_DIR
+INSTALL_DIR=${INSTALL_DIR:-/opt/3x-connect}
 
-bash <(curl -Ls https://raw.githubusercontent.com/MHSanaei/3x-ui/master/install.sh)
+TMP_DIR=$(mktemp -d)
+trap 'rm -rf "$TMP_DIR"' EXIT
 
-sudo mkdir -p /etc/3x-connect/certs
-sudo openssl req -x509 -nodes -newkey rsa:2048 -days 365 \
-  -subj "/CN=$(hostname)" \
-  -keyout /etc/3x-connect/certs/self-signed.key \
-  -out /etc/3x-connect/certs/self-signed.crt >/dev/null 2>&1
+apt-get update -y
+apt-get install -y curl ca-certificates git rsync
+if ! command -v node >/dev/null 2>&1; then
+  curl -fsSL https://deb.nodesource.com/setup_20.x | bash -
+  apt-get install -y nodejs
+fi
 
-echo "----"
-echo "Адрес панели: https://$(hostname -I | awk '{print $1}')"
-echo "Порт: $PANEL_PORT"
-echo "Логин: $ADMIN_LOGIN"
-echo "Пароль: $ADMIN_PASS"
-echo "Сертификат: self-signed"
-echo "----"
+REPO_URL=${REPO_URL:-"https://github.com/REPLACE_WITH_YOUR_REPO/3x-conn.git"}
+if [[ "$REPO_URL" == *"REPLACE_WITH_YOUR_REPO"* ]]; then
+  echo "ВНИМАНИЕ: перед запуском укажите корректный REPO_URL, например:" >&2
+  echo "REPO_URL=https://github.com/<user>/<repo>.git bash <(curl -Ls <raw-install-url>)" >&2
+  exit 1
+fi
+
+git clone --depth=1 "$REPO_URL" "$TMP_DIR/repo"
+mkdir -p "$INSTALL_DIR"
+rsync -a --delete --exclude .git "$TMP_DIR/repo/" "$INSTALL_DIR/"
+
+mkdir -p "$INSTALL_DIR/data"
+[[ -f "$INSTALL_DIR/data/panels.json" ]] || echo '[]' > "$INSTALL_DIR/data/panels.json"
+for f in tokens users sessions temp2fa; do
+  [[ -f "$INSTALL_DIR/data/${f}.json" ]] || echo '{}' > "$INSTALL_DIR/data/${f}.json"
+done
+
+cat > "$INSTALL_DIR/data/settings.json" <<JSON
+{
+  "subscriptionTitle": "",
+  "supportUrl": "",
+  "announcement": "",
+  "installCommand": "bash <(curl -Ls https://raw.githubusercontent.com/REPLACE_WITH_YOUR_REPO/3x-conn/main/scripts/install-3x-connect.sh)",
+  "telegram": {
+    "enabled": false,
+    "botToken": "",
+    "adminId": "",
+    "lastUpdateId": 0
+  }
+}
+JSON
+
+cat > /etc/systemd/system/3x-connect.service <<SERVICE
+[Unit]
+Description=3X Connect Panel
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=$INSTALL_DIR
+Environment=PORT=$PANEL_PORT
+ExecStart=/usr/bin/node server.js
+Restart=always
+RestartSec=3
+User=root
+
+[Install]
+WantedBy=multi-user.target
+SERVICE
+
+systemctl daemon-reload
+systemctl enable --now 3x-connect.service
+
+IP_ADDR=$(hostname -I | awk '{print $1}')
+
+echo ""
+echo "=== Готово ==="
+echo "Панель запущена: http://${IP_ADDR}:${PANEL_PORT}"
+echo "Далее откройте сайт и выполните первичную настройку (логин/пароль/2FA)."
+echo "Проверка сервиса: systemctl status 3x-connect --no-pager"

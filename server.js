@@ -580,7 +580,7 @@ async function handleApi(req, res, url) {
       supportUrl: '',
       announcement: '',
       telegram: { enabled: false, botToken: '', adminId: '', lastUpdateId: 0 },
-      installCommand: 'bash <(curl -Ls https://raw.githubusercontent.com/MHSanaei/3x-ui/master/install.sh)'
+      installCommand: 'bash <(curl -Ls https://raw.githubusercontent.com/REPLACE_WITH_YOUR_REPO/3x-conn/main/scripts/install-3x-connect.sh)'
     });
     if (settings.telegram?.botToken) settings.telegram.botToken = '***hidden***';
     sendJson(res, 200, settings);
@@ -601,7 +601,7 @@ async function handleApi(req, res, url) {
       supportUrl: '',
       announcement: '',
       telegram: { enabled: false, botToken: '', adminId: '', lastUpdateId: 0 },
-      installCommand: 'bash <(curl -Ls https://raw.githubusercontent.com/MHSanaei/3x-ui/master/install.sh)'
+      installCommand: 'bash <(curl -Ls https://raw.githubusercontent.com/REPLACE_WITH_YOUR_REPO/3x-conn/main/scripts/install-3x-connect.sh)'
     });
 
     const supportUrl = String(body.supportUrl || '').trim();

@@ -2,7 +2,7 @@
   "subscriptionTitle": "",
   "supportUrl": "",
   "announcement": "",
-  "installCommand": "bash <(curl -Ls https://raw.githubusercontent.com/MHSanaei/3x-ui/master/install.sh)",
+  "installCommand": "bash <(curl -Ls https://raw.githubusercontent.com/REPLACE_WITH_YOUR_REPO/3x-conn/main/scripts/install-3x-connect.sh)",
   "telegram": {
     "enabled": false,
     "botToken": "",

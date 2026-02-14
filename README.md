@@ -10,8 +10,24 @@
 - Метаданные для Happ: **Заголовок Подписки**, **URL Поддержки**, **Объявление**.
 - Telegram-бот (Bot API): проверка Admin ID, команды `/menu`, `/status`, `/ping`, `/add`, `/delete`.
 - Установочная команда Ubuntu в настройках:
-  `bash <(curl -Ls https://raw.githubusercontent.com/MHSanaei/3x-ui/master/install.sh)`
+  `bash <(curl -Ls https://raw.githubusercontent.com/<ваш_user>/<ваш_repo>/main/scripts/install-3x-connect.sh)`
 - Вспомогательный скрипт установки: `scripts/install-3x-connect.sh`.
+
+
+## Отдельная команда установки панели на Ubuntu
+
+Используйте отдельную команду для установки **именно этой панели** (не 3x-ui):
+
+```bash
+REPO_URL=https://github.com/<ваш_user>/<ваш_repo>.git \
+bash <(curl -Ls https://raw.githubusercontent.com/<ваш_user>/<ваш_repo>/main/scripts/install-3x-connect.sh)
+```
+
+Скрипт:
+- установит Node.js (если не установлен),
+- скачает ваш репозиторий с панелью,
+- создаст systemd-сервис `3x-connect`,
+- запустит панель на выбранном порту.
 
 ## Запуск
 
