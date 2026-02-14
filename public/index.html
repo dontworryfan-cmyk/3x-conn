@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>3X Connect Control</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <main class="container">
+      <header>
+        <h1>3X Connect Control</h1>
+        <p>Управление локациями 3X UI, единая подписка и Telegram-бот мониторинга.</p>
+      </header>
+
+      <section id="setup-card" class="card hidden">
+        <h2>Первичная настройка администратора</h2>
+        <form id="setup-form">
+          <label>Логин <input id="setup-username" required minlength="3" /></label>
+          <label>Пароль <input id="setup-password" type="password" required minlength="10" /></label>
+          <button type="submit">Создать администратора</button>
+        </form>
+        <pre id="setup-result" class="mono"></pre>
+      </section>
+
+      <section id="login-card" class="card hidden">
+        <h2>Вход</h2>
+        <form id="login-form">
+          <label>Логин <input id="login-username" required /></label>
+          <label>Пароль <input id="login-password" type="password" required /></label>
+          <button type="submit">Далее</button>
+        </form>
+        <form id="totp-form" class="hidden">
+          <label>Код 2FA <input id="totp-code" pattern="\d{6}" required /></label>
+          <button type="submit">Подтвердить вход</button>
+        </form>
+      </section>
+
+      <section id="app-card" class="hidden">
+        <section class="card">
+          <div class="row-between">
+            <h2>Локации</h2>
+            <div class="row">
+              <button id="ping-all" class="ghost">Пинг всех</button>
+              <button id="logout" class="ghost">Выйти</button>
+            </div>
+          </div>
+          <form id="add-panel-form">
+            <label>Название <input id="panel-name" required /></label>
+            <label>URL подписки <input id="panel-url" type="url" required /></label>
+            <button type="submit">Добавить локацию</button>
+          </form>
+          <ul id="panels-list" class="panel-list"></ul>
+        </section>
+
+        <section class="card">
+          <h2>Генерация единой подписки</h2>
+          <button id="generate-link">Сгенерировать URL</button>
+          <div id="result" class="result hidden">
+            <code id="merged-url"></code>
+            <button id="copy-link" class="ghost">Скопировать</button>
+          </div>
+        </section>
+
+        <section class="card">
+          <h2>Настройки Happ</h2>
+          <form id="settings-form">
+            <label>Заголовок подписки <input id="subscription-title" /></label>
+            <label>URL поддержки <input id="support-url" type="url" /></label>
+            <label>Объявление <textarea id="announcement"></textarea></label>
+            <label>Команда установки Ubuntu <input id="install-command" /></label>
+            <fieldset>
+              <legend>Telegram бот</legend>
+              <label class="inline"><input id="tg-enabled" type="checkbox" /> Включить управление</label>
+              <label>Bot Token <input id="tg-token" placeholder="123456:ABC..." /></label>
+              <label>Admin ID (обязательно) <input id="tg-admin-id" /></label>
+            </fieldset>
+            <button type="submit">Сохранить настройки</button>
+          </form>
+        </section>
+      </section>
+
+      <p id="status" class="status"></p>
+    </main>
+    <script src="/app.js" defer></script>
+  </body>
+</html>

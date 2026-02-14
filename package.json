@@ -1,0 +1,11 @@
+{
+  "name": "3x-conn",
+  "version": "1.1.0",
+  "description": "3X UI control panel with auth, 2FA, ping monitoring and Telegram bot",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js",
+    "lint": "node --check server.js public/app.js"
+  }
+}
